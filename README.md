@@ -9,44 +9,51 @@ Network module should handle every function that iteract with socket and network
 ## Tasks
 
 - <a href="#listener">listener</a>
-- network utils
-  - arp
-  - ping
+- <a href="#network_utils">network utils</a>
+  - <a href="#arp">arp</a>
+  - <a href="#ping">ping</a>
 
-1
+### <p name="listener"> listener </p>
 
-2
+In DHCP we need a socket listener.
 
-3
+Actually everything starts from our listener and our listener is our endpoint on network.
 
-4
+This section listen on port 67 (UDP) and prepare a platform for iteracting with network.
 
-5
+common validations like arping mac addresses and pinging ip addresses applied in this layer.
 
-6
+We get a callback from parameters and get information from this.
 
-7
+Listener implementation model :
 
-8
+```c
+listener (callback_t callback)
+{
+    /* `TODO Recive Discovery */
 
-9
+    /* `TODO Check requested ip address with ping */
 
-10
+    suitableIpAddressForLease = callbac(discovery);
 
-11
+    /* `TODO send offer with `suitableIpAddressForLease` informations */
 
-12
+    /* `TODO recive request and compare with discover */
 
-13
+    /* `TODO if everything is OK, send ack */
 
-14
+    /* `TODO checking arp for dhcp starvation preventation */
+}
+```
 
-15
+## <p name="network_utils"> network utils </p>
 
-16
+## <p name="arp"> arp </p>
 
-17
+We need arp checking after leasing for Dhcp Starvation preventation.
 
-18
+## <p name="ping"> ping </p>
 
-<p name="listener"> listener </p>
+When we want to lease a ip address fist of all we should check its.
+
+If this ip already sets statically we should create a lease from this ip and else we should skip this ip and choose next.
