@@ -34,7 +34,7 @@ listener (callback_t callback)
 
     /* `TODO Check requested ip address with ping */
 
-    suitableIpAddressForLease = callbac(discovery);
+    suitableIpAddressForLease = callback(discovery);
 
     /* `TODO send offer with `suitableIpAddressForLease` informations */
 
