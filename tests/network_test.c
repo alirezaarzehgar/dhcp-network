@@ -22,3 +22,9 @@ cleanupSuiteNetwork()
 {
   return 0;
 }
+
+void
+dhcpNetworkListenerTest()
+{
+  /* TODO dhcpNetworkListenerTest */
+}
