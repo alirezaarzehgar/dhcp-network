@@ -63,16 +63,16 @@ dhcpNetworkListener (char *address, int port)
                                       (struct sockaddr *)&dhcpClientAddress, &dhcpClientAddressLen);
         }
 
-      /* `TODO Check requested ip address with ping */
+      /* TODO Check requested ip address with ping */
 
       // suitableIpAddressForLease = callback (discovery);
 
-      /* `TODO send offer with `suitableIpAddressForLease` informations */
+      /* TODO send offer with `suitableIpAddressForLease` informations */
 
-      /* `TODO recive request and compare with discover */
+      /* TODO recive request and compare with discover */
 
-      /* `TODO if everything is OK, send ack */
+      /* TODO if everything is OK, send ack */
 
-      /* `TODO checking arp for dhcp starvation preventation */
+      /* TODO checking arp for dhcp starvation preventation */
     }
 }
