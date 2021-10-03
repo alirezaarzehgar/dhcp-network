@@ -14,11 +14,11 @@
 int
 initSuiteNetwork()
 {
-
+  return 0;
 }
 
 int
 cleanupSuiteNetwork()
 {
-
+  return 0;
 }
