@@ -55,13 +55,12 @@ dhcpNetworkListener (char *address, int port,
 
       char reqBuf[DHCP_PACKET_MAX_LEN];
 
-      char repBuf[DHCP_PACKET_MAX_LEN];
-
       dhcpNetworkPktInfo_t packetInfo;
 
       pktDhcpPacket_t *requestPkt = (pktDhcpPacket_t *)reqBuf;
 
-      pktDhcpPacket_t *replayPkt = (pktDhcpPacket_t *)repBuf;
+      pktDhcpPacket_t *replayPkt = (pktDhcpPacket_t *)calloc (sizeof (pktDhcpPacket_t),
+                           sizeof (pktDhcpPacket_t));
 
       /* recive discovery */
 
