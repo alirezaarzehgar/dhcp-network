@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 project(dhcp-network-tests)
 
-add_executable(${PROJECT_NAME}
+add_executable(tests
     network_test.c
     main.c
 )
