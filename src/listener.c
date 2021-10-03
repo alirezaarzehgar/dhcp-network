@@ -53,10 +53,10 @@ dhcpNetworkListener (char *address, int port)
 
       char buf[DHCP_PACKET_MAX_LEN];
 
-      pktDhcpPacket_t *packet = (pktDhcpPacket_t*)buf;
+      pktDhcpPacket_t *packet = (pktDhcpPacket_t *)buf;
 
       /* recive discovery */
-      
+
       while (fdReturnedValue <= 0)
         {
           fdReturnedValue = recvfrom (dhcpSocket, packet, DHCP_PACKET_MAX_LEN, 0,
@@ -65,7 +65,7 @@ dhcpNetworkListener (char *address, int port)
 
       /* TODO Check requested ip address with ping */
 
-      // suitableIpAddressForLease = callback (discovery);
+      /* suitableIpAddressForLease = callback (discovery); */
 
       /* TODO send offer with `suitableIpAddressForLease` informations */
 
