@@ -65,7 +65,7 @@ dhcpNetworkListener (char *address, int port)
 
       /* TODO Check requested ip address with ping */
 
-      /* suitableIpAddressForLease = callback (discovery); */
+      /* `suitableIpAddressForLease = callback (discovery);` */
 
       /* TODO send offer with `suitableIpAddressForLease` informations */
 
