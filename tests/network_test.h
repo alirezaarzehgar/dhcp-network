@@ -1,3 +1,5 @@
+#include "network/listener.h"
+
 #if !defined(TESTS_NETWORK_H)
 #define TESTS_NETWORK_H
 
