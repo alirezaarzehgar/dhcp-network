@@ -5,4 +5,6 @@ int initSuiteNetwork();
 
 int cleanupSuiteNetwork();
 
+void dhcpNetworkListenerTest();
+
 #endif

@@ -8,6 +8,7 @@
 
 CU_TestInfo network_tests[] =
 {
+  {"dhcpNetworkListenerTest", dhcpNetworkListenerTest},
   CU_TEST_INFO_NULL,
 };
 
