@@ -10,6 +10,7 @@
  */
 
 #include "network/listener.h"
+#include "pkt/dhcp.h"
 
 int
 dhcpNetworkListener (char *address, int port)
@@ -50,11 +51,17 @@ dhcpNetworkListener (char *address, int port)
 
       int fdReturnedValue = 0;
 
-      char packet[1024];
+      char buf[DHCP_PACKET_MAX_LEN];
 
-      /* After accepting and connecting */
+      pktDhcpPacket_t *packet = (pktDhcpPacket_t*)buf;
 
-      /* `TODO Recive Discovery */
+      /* recive discovery */
+      
+      while (fdReturnedValue <= 0)
+        {
+          fdReturnedValue = recvfrom (dhcpSocket, packet, DHCP_PACKET_MAX_LEN, 0,
+                                      (struct sockaddr *)&dhcpClientAddress, &dhcpClientAddressLen);
+        }
 
       /* `TODO Check requested ip address with ping */
 
