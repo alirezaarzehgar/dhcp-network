@@ -11,12 +11,14 @@
 
 #include "network_test.h"
 
-int initSuiteNetwork()
+int
+initSuiteNetwork()
 {
 
 }
 
-int cleanupSuiteNetwork()
+int
+cleanupSuiteNetwork()
 {
 
 }

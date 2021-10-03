@@ -8,18 +8,18 @@
 
 CU_TestInfo network_tests[] =
 {
-    CU_TEST_INFO_NULL,
+  CU_TEST_INFO_NULL,
 };
 
 CU_SuiteInfo suites[] =
 {
-    {
-        .pName = "network suite",
-        .pInitFunc = initSuiteNetwork,
-        .pCleanupFunc = cleanupSuiteNetwork,
-        .pTests = network_tests,
-    },
-    CU_SUITE_INFO_NULL,
+  {
+    .pName = "network suite",
+    .pInitFunc = initSuiteNetwork,
+    .pCleanupFunc = cleanupSuiteNetwork,
+    .pTests = network_tests,
+  },
+  CU_SUITE_INFO_NULL,
 };
 
 #endif
