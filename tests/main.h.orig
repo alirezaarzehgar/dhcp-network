@@ -1,0 +1,17 @@
+#include <CUnit/CUnit.h>
+#include <CUnit/Basic.h>
+
+#if !defined(TESTS_MAIN_H)
+#define TESTS_MAIN_H
+
+CU_SuiteInfo suites[] =
+{
+
+};
+
+CU_TestInfo network_tests[] = 
+{
+
+};
+
+#endif
