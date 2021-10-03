@@ -24,7 +24,7 @@ cleanupSuiteNetwork()
 }
 
 dhcpNetworkPktInfo_t
-getOfferDependencies (pktDhcpPacket_t* discovery)
+getOfferDependencies (pktDhcpPacket_t *discovery)
 {
   dhcpNetworkPktInfo_t info =
   {
@@ -35,22 +35,22 @@ getOfferDependencies (pktDhcpPacket_t* discovery)
 
     .options =
     {
-      {.func = (pktGenCallbackFunc_t)pktGenOptRouter, .param = "192.168.1.1"},
       {.func = (pktGenCallbackFunc_t)pktGenOptDhcpServerIdentifier, .param = "192.168.133.30"},
-      {.func = (pktGenCallbackFunc_t)pktGenOptDomainName, .param = "example.org"},
-      {.func = (pktGenCallbackFunc_t)pktGenOptSubnetMask, .param = "255.255.255.0"},
       {.func = (pktGenCallbackFunc_t)pktGenOptIpAddrLeaseTime, .param = (void *)600},
+      {.func = (pktGenCallbackFunc_t)pktGenOptSubnetMask, .param = "255.255.255.0"},
+      {.func = (pktGenCallbackFunc_t)pktGenOptRouter, .param = "192.168.1.1"},
+      {.func = (pktGenCallbackFunc_t)pktGenOptDomainName, .param = "example.org"},
       PKT_GEN_CALLBACK_NULL,
     }
   };
 
-  (void*)discovery;       /* Quit unused warning */
+  (void *)discovery;      /* Quit unused warning */
 
   return info;
 }
 
 dhcpNetworkPktInfo_t
-getAckDependencies (pktDhcpPacket_t* request)
+getAckDependencies (pktDhcpPacket_t *request)
 {
   dhcpNetworkPktInfo_t info =
   {
@@ -61,16 +61,16 @@ getAckDependencies (pktDhcpPacket_t* request)
 
     .options =
     {
-      {.func = (pktGenCallbackFunc_t)pktGenOptRouter, .param = "192.168.1.1"},
       {.func = (pktGenCallbackFunc_t)pktGenOptDhcpServerIdentifier, .param = "192.168.133.30"},
-      {.func = (pktGenCallbackFunc_t)pktGenOptDomainName, .param = "example.org"},
-      {.func = (pktGenCallbackFunc_t)pktGenOptSubnetMask, .param = "255.255.255.0"},
       {.func = (pktGenCallbackFunc_t)pktGenOptIpAddrLeaseTime, .param = (void *)600},
+      {.func = (pktGenCallbackFunc_t)pktGenOptSubnetMask, .param = "255.255.255.0"},
+      {.func = (pktGenCallbackFunc_t)pktGenOptRouter, .param = "192.168.1.1"},
+      {.func = (pktGenCallbackFunc_t)pktGenOptDomainName, .param = "example.org"},
       PKT_GEN_CALLBACK_NULL,
     }
   };
 
-  (void*)request;       /* Quit unused warning */
+  (void *)request;      /* Quit unused warning */
 
   return info;
 }

@@ -33,6 +33,8 @@ dhcpNetworkListener (char *address, int port,
   if (dhcpSocket == -1)
     return EXIT_FAILURE;
 
+  int broadcastEnable = 1;
+
   dhcpServerAddress.sin_family = AF_INET;
 
   dhcpServerAddress.sin_port = htons (port);
@@ -59,52 +61,55 @@ dhcpNetworkListener (char *address, int port,
 
       pktDhcpPacket_t *requestPkt = (pktDhcpPacket_t *)reqBuf;
 
-      pktDhcpPacket_t *replayPkt = (pktDhcpPacket_t *)calloc (sizeof (pktDhcpPacket_t),
-                           sizeof (pktDhcpPacket_t));
+      pktDhcpPacket_t *replayPkt = (pktDhcpPacket_t *)calloc (sizeof (
+                                     pktDhcpPacket_t),
+                                   sizeof (pktDhcpPacket_t));
 
       /* recive discovery */
 
-      while (fdReturnedValue <= 0)
+      do
         {
           fdReturnedValue = recvfrom (dhcpSocket, requestPkt, DHCP_PACKET_MAX_LEN, 0,
                                       (struct sockaddr *)&dhcpClientAddress, &dhcpClientAddressLen);
         }
+      while (pktGetDhcpMessageType (requestPkt) != DHCPDISCOVER);
 
-      /* TODO Check requested ip address with ping */
-
-      packetInfo = callbackGetOfferDependencies (requestPkt);
-
-      pktGenOffer (requestPkt, replayPkt, packetInfo.fields, packetInfo.options);
-
-      int c = 0;
-      printf ("\n");
-      for (size_t i = 0; c < DHCP_PACKET_MAX_LEN; i++)
+      if (fork() == 0)
         {
-          for (size_t j = 0; j < 16; j++)
-            printf ("%02x ", ((char *)replayPkt->options)[c++] & 0xff);
-          printf ("\n");
+          printf ("Hi discovery!\n");
+
+          /* TODO Check requested ip address with ping */
+
+          packetInfo = callbackGetOfferDependencies (requestPkt);
+
+          pktGenOffer (requestPkt, replayPkt, packetInfo.fields, packetInfo.options);
+
+          sendto (dhcpSocket, replayPkt, DHCP_PACKET_MAX_LEN, 0,
+                  (struct sockaddr *)&dhcpClientAddress, dhcpClientAddressLen);
+
+          printf ("offer sent : (%d)\n", pktGetDhcpMessageType (replayPkt));
+
+          do
+            {
+              fdReturnedValue = recvfrom (dhcpSocket, requestPkt, DHCP_PACKET_MAX_LEN, 0,
+                                          (struct sockaddr *)&dhcpClientAddress, &dhcpClientAddressLen);
+            }
+          while (pktGetDhcpMessageType (requestPkt) != DHCPREQUEST);
+
+          packetInfo = callbackGetAckDependencies (requestPkt);
+
+          pktGenAck (requestPkt, replayPkt, packetInfo.fields, packetInfo.options);
+
+          printf ("\nmsg type : %d\n", pktGetDhcpMessageType (replayPkt));
+
+          sendto (dhcpSocket, replayPkt, DHCP_PACKET_MAX_LEN, 0,
+                  (struct sockaddr *)&dhcpClientAddress, dhcpClientAddressLen);
+
+          /* TODO recive request and compare with discover */
+
+          /* TODO if everything is OK, send ack */
+
+          /* TODO checking arp for dhcp starvation preventation */
         }
-
-      sendto (dhcpSocket, replayPkt, DHCP_PACKET_MAX_LEN, 0,
-              (struct sockaddr *)&dhcpClientAddress, dhcpClientAddressLen);
-
-      while (fdReturnedValue <= 0)
-        {
-          fdReturnedValue = recvfrom (dhcpSocket, requestPkt, DHCP_PACKET_MAX_LEN, 0,
-                                      (struct sockaddr *)&dhcpClientAddress, &dhcpClientAddressLen);
-        }
-
-      packetInfo = callbackGetAckDependencies (requestPkt);
-
-      pktGenAck (requestPkt, replayPkt, packetInfo.fields, packetInfo.options);
-
-      sendto (dhcpSocket, replayPkt, DHCP_PACKET_MAX_LEN, 0,
-              (struct sockaddr *)&dhcpClientAddress, dhcpClientAddressLen);
-
-      /* TODO recive request and compare with discover */
-
-      /* TODO if everything is OK, send ack */
-
-      /* TODO checking arp for dhcp starvation preventation */
     }
 }
