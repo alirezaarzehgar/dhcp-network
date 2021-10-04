@@ -33,13 +33,30 @@ dhcpNetworkListener (char *address, int port,
   if (dhcpSocket == -1)
     return EXIT_FAILURE;
 
-  int broadcastEnable = 1;
+  int enable = 1;
+
+  retval = setsockopt (dhcpSocket, SOL_SOCKET, SO_BROADCAST, &enable,
+                       sizeof (enable));
+  if (retval == -1)
+    return EXIT_FAILURE;
+
+  retval = setsockopt (dhcpSocket, SOL_SOCKET, SO_REUSEADDR, &enable,
+                       sizeof (enable));
+
+  if (retval == -1)
+    return EXIT_FAILURE;
+
+  retval = setsockopt (dhcpSocket, SOL_SOCKET, SO_REUSEPORT, &enable,
+                       sizeof (enable));
+
+  if (retval == -1)
+    return EXIT_FAILURE;
 
   dhcpServerAddress.sin_family = AF_INET;
 
   dhcpServerAddress.sin_port = htons (port);
 
-  dhcpServerAddress.sin_addr.s_addr = inet_addr (address);
+  dhcpServerAddress.sin_addr.s_addr = INADDR_ANY;
 
   retval = bind (dhcpSocket, (struct sockaddr *)&dhcpServerAddress,
                  sizeof (dhcpServerAddress));
@@ -47,6 +64,7 @@ dhcpNetworkListener (char *address, int port,
   if (retval == -1)
     return EXIT_FAILURE;
 
+  /* listener */
   while (1)
     {
       struct sockaddr_in dhcpClientAddress;
@@ -76,7 +94,7 @@ dhcpNetworkListener (char *address, int port,
 
       if (fork() == 0)
         {
-          printf ("Hi discovery!\n");
+          struct in_addr *requestedIpAddress;
 
           /* TODO Check requested ip address with ping */
 
@@ -84,10 +102,10 @@ dhcpNetworkListener (char *address, int port,
 
           pktGenOffer (requestPkt, replayPkt, packetInfo.fields, packetInfo.options);
 
+          dhcpClientAddress.sin_addr.s_addr = INADDR_BROADCAST;
+
           sendto (dhcpSocket, replayPkt, DHCP_PACKET_MAX_LEN, 0,
                   (struct sockaddr *)&dhcpClientAddress, dhcpClientAddressLen);
-
-          printf ("offer sent : (%d)\n", pktGetDhcpMessageType (replayPkt));
 
           do
             {
@@ -100,14 +118,10 @@ dhcpNetworkListener (char *address, int port,
 
           pktGenAck (requestPkt, replayPkt, packetInfo.fields, packetInfo.options);
 
-          printf ("\nmsg type : %d\n", pktGetDhcpMessageType (replayPkt));
+          dhcpClientAddress.sin_addr.s_addr = INADDR_BROADCAST;
 
           sendto (dhcpSocket, replayPkt, DHCP_PACKET_MAX_LEN, 0,
-                  (struct sockaddr *)&dhcpClientAddress, dhcpClientAddressLen);
-
-          /* TODO recive request and compare with discover */
-
-          /* TODO if everything is OK, send ack */
+                  (struct sockaddr *)&dhcpClientAddress, sizeof (dhcpClientAddress));
 
           /* TODO checking arp for dhcp starvation preventation */
         }

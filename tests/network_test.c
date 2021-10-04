@@ -29,7 +29,7 @@ getOfferDependencies (pktDhcpPacket_t *discovery)
   dhcpNetworkPktInfo_t info =
   {
     .fields = {
-      {.func = (pktGenCallbackFunc_t)pktGenFieldYourIpAddress, .param = "192.168.133.144"},
+      {.func = (pktGenCallbackFunc_t)pktGenFieldYourIpAddress, .param = "192.168.133.117"},
       PKT_GEN_CALLBACK_NULL,
     },
 
@@ -39,7 +39,7 @@ getOfferDependencies (pktDhcpPacket_t *discovery)
       {.func = (pktGenCallbackFunc_t)pktGenOptIpAddrLeaseTime, .param = (void *)600},
       {.func = (pktGenCallbackFunc_t)pktGenOptSubnetMask, .param = "255.255.255.0"},
       {.func = (pktGenCallbackFunc_t)pktGenOptRouter, .param = "192.168.1.1"},
-      {.func = (pktGenCallbackFunc_t)pktGenOptDomainName, .param = "example.org"},
+      {.func = (pktGenCallbackFunc_t)pktGenOptDomainName, .param = "alireza.zharfpouyan.net"},
       PKT_GEN_CALLBACK_NULL,
     }
   };
@@ -55,7 +55,7 @@ getAckDependencies (pktDhcpPacket_t *request)
   dhcpNetworkPktInfo_t info =
   {
     .fields = {
-      {.func = (pktGenCallbackFunc_t)pktGenFieldYourIpAddress, .param = "192.168.133.144"},
+      {.func = (pktGenCallbackFunc_t)pktGenFieldYourIpAddress, .param = "192.168.133.117"},
       PKT_GEN_CALLBACK_NULL,
     },
 
@@ -65,7 +65,7 @@ getAckDependencies (pktDhcpPacket_t *request)
       {.func = (pktGenCallbackFunc_t)pktGenOptIpAddrLeaseTime, .param = (void *)600},
       {.func = (pktGenCallbackFunc_t)pktGenOptSubnetMask, .param = "255.255.255.0"},
       {.func = (pktGenCallbackFunc_t)pktGenOptRouter, .param = "192.168.1.1"},
-      {.func = (pktGenCallbackFunc_t)pktGenOptDomainName, .param = "example.org"},
+      {.func = (pktGenCallbackFunc_t)pktGenOptDomainName, .param = "alireza.zharfpouyan.net"},
       PKT_GEN_CALLBACK_NULL,
     }
   };
@@ -85,7 +85,7 @@ dhcpNetworkListenerTest()
 {
   int retval;
 
-  retval = dhcpNetworkListener ("0.0.0.0", 67, getOfferDependencies,
+  retval = dhcpNetworkListener ("192.168.133.30", 67, getOfferDependencies,
                                 getAckDependencies);
 
   if (retval)
