@@ -60,6 +60,12 @@ If this ip already sets statically we should create a lease from this ip and els
 
 ## Running tests
 
+You should clone this repository with its dependencies
+
+```
+git clone https://github.com/alirezaarzehgar/dhcp-network.git --recurse-submodules
+```
+
 ```
 mkdir build
 cd build
