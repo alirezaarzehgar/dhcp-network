@@ -57,3 +57,13 @@ We need arp checking after leasing for Dhcp Starvation preventation.
 When we want to lease a ip address fist of all we should check its.
 
 If this ip already sets statically we should create a lease from this ip and else we should skip this ip and choose next.
+
+## Running tests
+
+```
+mkdir build
+cd build
+cmake ..
+cmake --build .
+sudo ./build/tests/dhcp-network-tests
+```
