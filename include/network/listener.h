@@ -20,8 +20,8 @@ typedef struct
 
 static inline void
 dhcpNetworkReciveBootRequestPkt (int dhcpSocket, pktDhcpPacket_t *requestPkt,
-                                 struct sockaddr_in *dhcpClientAddress, socklen_t *dhcpClientAddressLen,
-                                 int pktType)
+                                 pktDhcpPacket_t *previousReplayPkt, struct sockaddr_in *dhcpClientAddress,
+                                 socklen_t *dhcpClientAddressLen, int pktType)
 {
   int fdReturnedValue = 0;
 
@@ -29,6 +29,12 @@ dhcpNetworkReciveBootRequestPkt (int dhcpSocket, pktDhcpPacket_t *requestPkt,
     {
       fdReturnedValue = recvfrom (dhcpSocket, requestPkt, DHCP_PACKET_MAX_LEN, 0,
                                   (struct sockaddr *)dhcpClientAddress, dhcpClientAddressLen);
+
+      if (fdReturnedValue >= 0 && pktType == DHCPREQUEST
+          && previousReplayPkt != NULL && requestPkt->xid == previousReplayPkt->xid)
+        break;
+      else
+        continue;
     }
   while (pktGetDhcpMessageType (requestPkt) != pktType);
 }
@@ -37,16 +43,17 @@ static inline void
 dhcpNetworkReciveDiscoveryPkt (int dhcpSocket, pktDhcpPacket_t *requestPkt,
                                struct sockaddr_in *dhcpClientAddress, socklen_t *dhcpClientAddressLen)
 {
-  dhcpNetworkReciveBootRequestPkt (dhcpSocket, requestPkt, dhcpClientAddress,
-                                   dhcpClientAddressLen, DHCPDISCOVER);
+  dhcpNetworkReciveBootRequestPkt (dhcpSocket, requestPkt, NULL,
+                                   dhcpClientAddress, dhcpClientAddressLen, DHCPDISCOVER);
 }
 
 static inline void
 dhcpNetworkReciveRequestPkt (int dhcpSocket, pktDhcpPacket_t *requestPkt,
-                             struct sockaddr_in *dhcpClientAddress, socklen_t *dhcpClientAddressLen)
+                             pktDhcpPacket_t *previousReplayPkt, struct sockaddr_in *dhcpClientAddress,
+                             socklen_t *dhcpClientAddressLen)
 {
-  dhcpNetworkReciveBootRequestPkt (dhcpSocket, requestPkt, dhcpClientAddress,
-                                   dhcpClientAddressLen, DHCPREQUEST);
+  dhcpNetworkReciveBootRequestPkt (dhcpSocket, requestPkt, previousReplayPkt,
+                                   dhcpClientAddress, dhcpClientAddressLen, DHCPREQUEST);
 }
 
 static inline void

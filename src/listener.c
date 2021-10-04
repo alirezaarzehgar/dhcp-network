@@ -116,8 +116,8 @@ dhcpNetworkListener (char *address, int port,
           dhcpNetworkSendBootReplayPkt (dhcpSocket, replayPkt, &dhcpClientAddress,
                                         dhcpClientAddressLen);
 
-          dhcpNetworkReciveRequestPkt (dhcpSocket, requestPkt, &dhcpClientAddress,
-                                       &dhcpClientAddressLen);
+          dhcpNetworkReciveRequestPkt (dhcpSocket, requestPkt, replayPkt,
+                                       &dhcpClientAddress, &dhcpClientAddressLen);
 
           packetInfo = callbackGetAckDependencies (requestPkt);
 
@@ -127,8 +127,17 @@ dhcpNetworkListener (char *address, int port,
                                         dhcpClientAddressLen);
 
           /* TODO checking arp for dhcp starvation preventation */
+          printf ("Lease!\n");
+
+          bzero (reqBuf, DHCP_PACKET_MAX_LEN);
+
+          bzero (replayPkt, DHCP_PACKET_MAX_LEN);
 
           free (replayPkt);
+
+          replayPkt = NULL;
+
+          exit (EXIT_SUCCESS);
         }
     }
 }
