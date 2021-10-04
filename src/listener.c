@@ -10,10 +10,60 @@
  */
 
 #include "network/listener.h"
-#include "pkt/dhcp.h"
 
 int
-dhcpNetworkListener (char *address, int port)
+dhcpNetworkSocketInit (int port)
+{
+  int retval;
+
+  int dhcpSocket;
+
+  struct sockaddr_in dhcpServerAddress;
+
+  dhcpSocket = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+  if (dhcpSocket == -1)
+    return EXIT_FAILURE;
+
+  int enable = 1;
+
+  retval = setsockopt (dhcpSocket, SOL_SOCKET, SO_BROADCAST, &enable,
+                       sizeof (enable));
+  if (retval == -1)
+    return EXIT_FAILURE;
+
+  retval = setsockopt (dhcpSocket, SOL_SOCKET, SO_REUSEADDR, &enable,
+                       sizeof (enable));
+
+  if (retval == -1)
+    return EXIT_FAILURE;
+
+  retval = setsockopt (dhcpSocket, SOL_SOCKET, SO_REUSEPORT, &enable,
+                       sizeof (enable));
+
+  if (retval == -1)
+    return EXIT_FAILURE;
+
+  dhcpServerAddress.sin_family = AF_INET;
+
+  dhcpServerAddress.sin_port = htons (port);
+
+  dhcpServerAddress.sin_addr.s_addr = INADDR_ANY;
+
+  retval = bind (dhcpSocket, (struct sockaddr *)&dhcpServerAddress,
+                 sizeof (dhcpServerAddress));
+
+  if (retval == -1)
+    return EXIT_FAILURE;
+
+  return dhcpSocket;
+}
+
+int
+dhcpNetworkListener (char *address, int port,
+                     dhcpNetworkPktInfo_t (*callbackGetOfferDependencies) (pktDhcpPacket_t
+                         *discovery),
+                     dhcpNetworkPktInfo_t (*callbackGetAckDependencies) (pktDhcpPacket_t *request))
 {
   /* TODO port validation */
 
@@ -22,27 +72,14 @@ dhcpNetworkListener (char *address, int port)
   /* init */
   int dhcpSocket;
 
-  struct sockaddr_in dhcpServerAddress;
-
   int retval;
 
-  dhcpSocket = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  dhcpSocket = dhcpNetworkSocketInit (port);
 
-  if (dhcpSocket == -1)
+  if (dhcpSocket == 1)
     return EXIT_FAILURE;
 
-  dhcpServerAddress.sin_family = AF_INET;
-
-  dhcpServerAddress.sin_port = htons (port);
-
-  dhcpServerAddress.sin_addr.s_addr = inet_addr (address);
-
-  retval = bind (dhcpSocket, (struct sockaddr *)&dhcpServerAddress,
-                 sizeof (struct sockaddr));
-
-  if (retval == -1)
-    return EXIT_FAILURE;
-
+  /* listener */
   while (1)
     {
       struct sockaddr_in dhcpClientAddress;
@@ -51,28 +88,56 @@ dhcpNetworkListener (char *address, int port)
 
       int fdReturnedValue = 0;
 
-      char buf[DHCP_PACKET_MAX_LEN];
+      char reqBuf[DHCP_PACKET_MAX_LEN];
 
-      pktDhcpPacket_t *packet = (pktDhcpPacket_t *)buf;
+      dhcpNetworkPktInfo_t packetInfo;
+
+      pktDhcpPacket_t *requestPkt = (pktDhcpPacket_t *)reqBuf;
+
+      pktDhcpPacket_t *replayPkt = (pktDhcpPacket_t *)calloc (sizeof (
+                                     pktDhcpPacket_t),
+                                   sizeof (pktDhcpPacket_t));
 
       /* recive discovery */
 
-      while (fdReturnedValue <= 0)
+      dhcpNetworkReciveDiscoveryPkt (dhcpSocket, requestPkt, &dhcpClientAddress,
+                                     &dhcpClientAddressLen);
+
+      if (fork() == 0)
         {
-          fdReturnedValue = recvfrom (dhcpSocket, packet, DHCP_PACKET_MAX_LEN, 0,
-                                      (struct sockaddr *)&dhcpClientAddress, &dhcpClientAddressLen);
+          struct in_addr *requestedIpAddress;
+
+          /* TODO Check requested ip address with ping */
+
+          packetInfo = callbackGetOfferDependencies (requestPkt);
+
+          pktGenOffer (requestPkt, replayPkt, packetInfo.fields, packetInfo.options);
+
+          dhcpNetworkSendBootReplayPkt (dhcpSocket, replayPkt, &dhcpClientAddress,
+                                        dhcpClientAddressLen);
+
+          dhcpNetworkReciveRequestPkt (dhcpSocket, requestPkt, replayPkt,
+                                       &dhcpClientAddress, &dhcpClientAddressLen);
+
+          packetInfo = callbackGetAckDependencies (requestPkt);
+
+          pktGenAck (requestPkt, replayPkt, packetInfo.fields, packetInfo.options);
+
+          dhcpNetworkSendBootReplayPkt (dhcpSocket, replayPkt, &dhcpClientAddress,
+                                        dhcpClientAddressLen);
+
+          /* TODO checking arp for dhcp starvation preventation */
+          printf ("Lease!\n");
+
+          bzero (reqBuf, DHCP_PACKET_MAX_LEN);
+
+          bzero (replayPkt, DHCP_PACKET_MAX_LEN);
+
+          free (replayPkt);
+
+          replayPkt = NULL;
+
+          exit (EXIT_SUCCESS);
         }
-
-      /* TODO Check requested ip address with ping */
-
-      /* `suitableIpAddressForLease = callback (discovery);` */
-
-      /* TODO send offer with `suitableIpAddressForLease` informations */
-
-      /* TODO recive request and compare with discover */
-
-      /* TODO if everything is OK, send ack */
-
-      /* TODO checking arp for dhcp starvation preventation */
     }
 }
