@@ -18,9 +18,52 @@ typedef struct
   pktGenCallback_t options[225];
 } dhcpNetworkPktInfo_t;
 
+static inline void
+dhcpNetworkReciveBootRequestPkt (int dhcpSocket, pktDhcpPacket_t *requestPkt,
+                                 struct sockaddr_in *dhcpClientAddress, socklen_t *dhcpClientAddressLen,
+                                 int pktType)
+{
+  int fdReturnedValue = 0;
+
+  do
+    {
+      fdReturnedValue = recvfrom (dhcpSocket, requestPkt, DHCP_PACKET_MAX_LEN, 0,
+                                  (struct sockaddr *)dhcpClientAddress, dhcpClientAddressLen);
+    }
+  while (pktGetDhcpMessageType (requestPkt) != pktType);
+}
+
+static inline void
+dhcpNetworkReciveDiscoveryPkt (int dhcpSocket, pktDhcpPacket_t *requestPkt,
+                               struct sockaddr_in *dhcpClientAddress, socklen_t *dhcpClientAddressLen)
+{
+  dhcpNetworkReciveBootRequestPkt (dhcpSocket, requestPkt, dhcpClientAddress,
+                                   dhcpClientAddressLen, DHCPDISCOVER);
+}
+
+static inline void
+dhcpNetworkReciveRequestPkt (int dhcpSocket, pktDhcpPacket_t *requestPkt,
+                             struct sockaddr_in *dhcpClientAddress, socklen_t *dhcpClientAddressLen)
+{
+  dhcpNetworkReciveBootRequestPkt (dhcpSocket, requestPkt, dhcpClientAddress,
+                                   dhcpClientAddressLen, DHCPREQUEST);
+}
+
+static inline void
+dhcpNetworkSendBootReplayPkt (int dhcpSocket, pktDhcpPacket_t *replayPkt,
+                              struct sockaddr_in *dhcpClientAddress, socklen_t dhcpClientAddressLen)
+{
+  dhcpClientAddress->sin_addr.s_addr = INADDR_BROADCAST;
+
+  sendto (dhcpSocket, replayPkt, DHCP_PACKET_MAX_LEN, 0,
+          (struct sockaddr *)dhcpClientAddress, dhcpClientAddressLen);
+}
+
+int dhcpNetworkSocketInit (int port);
 
 int dhcpNetworkListener (char *address, int port,
-                         dhcpNetworkPktInfo_t (*callbackGetOfferDependencies) (pktDhcpPacket_t* discovery),
-                         dhcpNetworkPktInfo_t (*callbackGetAckDependencies) (pktDhcpPacket_t* request));
+                         dhcpNetworkPktInfo_t (*callbackGetOfferDependencies) (pktDhcpPacket_t
+                             *discovery),
+                         dhcpNetworkPktInfo_t (*callbackGetAckDependencies) (pktDhcpPacket_t *request));
 
 #endif

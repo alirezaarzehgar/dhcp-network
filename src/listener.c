@@ -12,21 +12,13 @@
 #include "network/listener.h"
 
 int
-dhcpNetworkListener (char *address, int port,
-                     dhcpNetworkPktInfo_t (*callbackGetOfferDependencies) (pktDhcpPacket_t
-                         *discovery),
-                     dhcpNetworkPktInfo_t (*callbackGetAckDependencies) (pktDhcpPacket_t *request))
+dhcpNetworkSocketInit (int port)
 {
-  /* TODO port validation */
+  int retval;
 
-  /* TODO address validation */
-
-  /* init */
   int dhcpSocket;
 
   struct sockaddr_in dhcpServerAddress;
-
-  int retval;
 
   dhcpSocket = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
@@ -64,6 +56,29 @@ dhcpNetworkListener (char *address, int port,
   if (retval == -1)
     return EXIT_FAILURE;
 
+  return dhcpSocket;
+}
+
+int
+dhcpNetworkListener (char *address, int port,
+                     dhcpNetworkPktInfo_t (*callbackGetOfferDependencies) (pktDhcpPacket_t
+                         *discovery),
+                     dhcpNetworkPktInfo_t (*callbackGetAckDependencies) (pktDhcpPacket_t *request))
+{
+  /* TODO port validation */
+
+  /* TODO address validation */
+
+  /* init */
+  int dhcpSocket;
+
+  int retval;
+
+  dhcpSocket = dhcpNetworkSocketInit (port);
+
+  if (dhcpSocket == 1)
+    return EXIT_FAILURE;
+
   /* listener */
   while (1)
     {
@@ -85,12 +100,8 @@ dhcpNetworkListener (char *address, int port,
 
       /* recive discovery */
 
-      do
-        {
-          fdReturnedValue = recvfrom (dhcpSocket, requestPkt, DHCP_PACKET_MAX_LEN, 0,
-                                      (struct sockaddr *)&dhcpClientAddress, &dhcpClientAddressLen);
-        }
-      while (pktGetDhcpMessageType (requestPkt) != DHCPDISCOVER);
+      dhcpNetworkReciveDiscoveryPkt (dhcpSocket, requestPkt, &dhcpClientAddress,
+                                     &dhcpClientAddressLen);
 
       if (fork() == 0)
         {
@@ -102,28 +113,22 @@ dhcpNetworkListener (char *address, int port,
 
           pktGenOffer (requestPkt, replayPkt, packetInfo.fields, packetInfo.options);
 
-          dhcpClientAddress.sin_addr.s_addr = INADDR_BROADCAST;
+          dhcpNetworkSendBootReplayPkt (dhcpSocket, replayPkt, &dhcpClientAddress,
+                                        dhcpClientAddressLen);
 
-          sendto (dhcpSocket, replayPkt, DHCP_PACKET_MAX_LEN, 0,
-                  (struct sockaddr *)&dhcpClientAddress, dhcpClientAddressLen);
-
-          do
-            {
-              fdReturnedValue = recvfrom (dhcpSocket, requestPkt, DHCP_PACKET_MAX_LEN, 0,
-                                          (struct sockaddr *)&dhcpClientAddress, &dhcpClientAddressLen);
-            }
-          while (pktGetDhcpMessageType (requestPkt) != DHCPREQUEST);
+          dhcpNetworkReciveRequestPkt (dhcpSocket, requestPkt, &dhcpClientAddress,
+                                       &dhcpClientAddressLen);
 
           packetInfo = callbackGetAckDependencies (requestPkt);
 
           pktGenAck (requestPkt, replayPkt, packetInfo.fields, packetInfo.options);
 
-          dhcpClientAddress.sin_addr.s_addr = INADDR_BROADCAST;
-
-          sendto (dhcpSocket, replayPkt, DHCP_PACKET_MAX_LEN, 0,
-                  (struct sockaddr *)&dhcpClientAddress, sizeof (dhcpClientAddress));
+          dhcpNetworkSendBootReplayPkt (dhcpSocket, replayPkt, &dhcpClientAddress,
+                                        dhcpClientAddressLen);
 
           /* TODO checking arp for dhcp starvation preventation */
+
+          free (replayPkt);
         }
     }
 }
