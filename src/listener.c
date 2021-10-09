@@ -95,7 +95,7 @@ dhcpNetworkListener (char *address, int port,
 
       pktDhcpPacket_t *requestPkt = (pktDhcpPacket_t *)reqBuf;
 
-      pktDhcpPacket_t *replayPkt = (pktDhcpPacket_t *)calloc (sizeof (
+      pktDhcpPacket_t *replyPkt = (pktDhcpPacket_t *)calloc (sizeof (
                                      pktDhcpPacket_t),
                                    sizeof (pktDhcpPacket_t));
 
@@ -113,23 +113,24 @@ dhcpNetworkListener (char *address, int port,
 
           packetInfo = callbackGetOfferDependencies (requestPkt);
 
-          pktGenOffer (requestPkt, replayPkt, packetInfo.fields, packetInfo.options);
+          pktGenOffer (requestPkt, replyPkt, packetInfo.fields, packetInfo.options);
 
-          dhcpNetworkSendBootReplayPkt (dhcpSocket, replayPkt, &dhcpClientAddress,
+          dhcpNetworkSendBootReplyPkt (dhcpSocket, replyPkt, &dhcpClientAddress,
                                         dhcpClientAddressLen);
 
-          dhcpNetworkReciveRequestPkt (dhcpSocket, requestPkt, replayPkt,
+          dhcpNetworkReciveRequestPkt (dhcpSocket, requestPkt, replyPkt,
                                        &dhcpClientAddress, &dhcpClientAddressLen);
 
           packetInfo = callbackGetAckDependencies (requestPkt);
 
-          pktGenAck (requestPkt, replayPkt, packetInfo.fields, packetInfo.options);
+          pktGenAck (requestPkt, replyPkt, packetInfo.fields, packetInfo.options);
 
 
           /* TODO checking arp for dhcp starvation preventation */
-          if ((errorMsg = callbackLeaseOperation (replayPkt)) == NULL)
+          
+          if ((errorMsg = callbackLeaseOperation (replyPkt)) == NULL)
             {
-              dhcpNetworkSendBootReplayPkt (dhcpSocket, replayPkt, &dhcpClientAddress,
+              dhcpNetworkSendBootReplyPkt (dhcpSocket, replyPkt, &dhcpClientAddress,
                                             dhcpClientAddressLen);
             }
           else
@@ -140,19 +141,19 @@ dhcpNetworkListener (char *address, int port,
                 {.func = (pktGenCallbackFunc_t)pktGenOptMessage, .param = errorMsg},
               };
 
-              pktGenNak (requestPkt, replayPkt, NULL, options);
+              pktGenNak (requestPkt, replyPkt, NULL, options);
 
-              dhcpNetworkSendBootReplayPkt (dhcpSocket, replayPkt, &dhcpClientAddress,
+              dhcpNetworkSendBootReplyPkt (dhcpSocket, replyPkt, &dhcpClientAddress,
                                             dhcpClientAddressLen);
             }
 
           bzero (reqBuf, DHCP_PACKET_MAX_LEN);
 
-          bzero (replayPkt, DHCP_PACKET_MAX_LEN);
+          bzero (replyPkt, DHCP_PACKET_MAX_LEN);
 
-          free (replayPkt);
+          free (replyPkt);
 
-          replayPkt = NULL;
+          replyPkt = NULL;
 
           exit (EXIT_SUCCESS);
         }
