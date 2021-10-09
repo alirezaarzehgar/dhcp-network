@@ -75,6 +75,13 @@ getAckDependencies (pktDhcpPacket_t *request)
   return info;
 }
 
+char*
+leaseOperation (pktDhcpPacket_t *ack)
+{
+  printf("lease!\n");
+  return NULL;
+}
+
 /**
  * @brief Need to system test.
  * We use it just like an endpoint
@@ -86,7 +93,7 @@ dhcpNetworkListenerTest()
   int retval;
 
   retval = dhcpNetworkListener ("192.168.133.30", 67, getOfferDependencies,
-                                getAckDependencies);
+                                getAckDependencies, leaseOperation);
 
   if (retval)
     perror ("dhcpNetworkListener");

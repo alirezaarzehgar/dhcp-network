@@ -63,7 +63,8 @@ int
 dhcpNetworkListener (char *address, int port,
                      dhcpNetworkPktInfo_t (*callbackGetOfferDependencies) (pktDhcpPacket_t
                          *discovery),
-                     dhcpNetworkPktInfo_t (*callbackGetAckDependencies) (pktDhcpPacket_t *request))
+                     dhcpNetworkPktInfo_t (*callbackGetAckDependencies) (pktDhcpPacket_t *request),
+                     char * (*callbackLeaseOperation) (pktDhcpPacket_t *ack))
 {
   /* TODO port validation */
 
@@ -105,6 +106,7 @@ dhcpNetworkListener (char *address, int port,
 
       if (fork() == 0)
         {
+          char *errorMsg;
           struct in_addr *requestedIpAddress;
 
           /* TODO Check requested ip address with ping */
@@ -123,11 +125,26 @@ dhcpNetworkListener (char *address, int port,
 
           pktGenAck (requestPkt, replayPkt, packetInfo.fields, packetInfo.options);
 
-          dhcpNetworkSendBootReplayPkt (dhcpSocket, replayPkt, &dhcpClientAddress,
-                                        dhcpClientAddressLen);
 
           /* TODO checking arp for dhcp starvation preventation */
-          printf ("Lease!\n");
+          if ((errorMsg = callbackLeaseOperation (replayPkt)) == NULL)
+            {
+              dhcpNetworkSendBootReplayPkt (dhcpSocket, replayPkt, &dhcpClientAddress,
+                                            dhcpClientAddressLen);
+            }
+          else
+            {
+              pktGenCallback_t options[] =
+              {
+                {.func = (pktGenCallbackFunc_t)pktGenOptDhcpServerIdentifier, .param = address},
+                {.func = (pktGenCallbackFunc_t)pktGenOptMessage, .param = errorMsg},
+              };
+
+              pktGenNak (requestPkt, replayPkt, NULL, options);
+
+              dhcpNetworkSendBootReplayPkt (dhcpSocket, replayPkt, &dhcpClientAddress,
+                                            dhcpClientAddressLen);
+            }
 
           bzero (reqBuf, DHCP_PACKET_MAX_LEN);
 

@@ -71,6 +71,7 @@ int dhcpNetworkSocketInit (int port);
 int dhcpNetworkListener (char *address, int port,
                          dhcpNetworkPktInfo_t (*callbackGetOfferDependencies) (pktDhcpPacket_t
                              *discovery),
-                         dhcpNetworkPktInfo_t (*callbackGetAckDependencies) (pktDhcpPacket_t *request));
+                         dhcpNetworkPktInfo_t (*callbackGetAckDependencies) (pktDhcpPacket_t *request),
+                         char* (*callbackLeaseOperation) (pktDhcpPacket_t *ack));
 
 #endif
