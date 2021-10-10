@@ -32,18 +32,6 @@ dhcpNetworkSocketInit (int port)
   if (retval == -1)
     return EXIT_FAILURE;
 
-  retval = setsockopt (dhcpSocket, SOL_SOCKET, SO_REUSEADDR, &enable,
-                       sizeof (enable));
-
-  if (retval == -1)
-    return EXIT_FAILURE;
-
-  retval = setsockopt (dhcpSocket, SOL_SOCKET, SO_REUSEPORT, &enable,
-                       sizeof (enable));
-
-  if (retval == -1)
-    return EXIT_FAILURE;
-
   dhcpServerAddress.sin_family = AF_INET;
 
   dhcpServerAddress.sin_port = htons (port);
