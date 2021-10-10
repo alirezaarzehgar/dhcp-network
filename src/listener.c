@@ -61,9 +61,8 @@ dhcpNetworkSocketInit (int port)
 
 int
 dhcpNetworkListener (char *address, int port,
-                     dhcpNetworkPktInfo_t (*callbackGetOfferDependencies) (pktDhcpPacket_t
+                     dhcpNetworkPktInfo_t (*callbackGetReplyDependencies) (pktDhcpPacket_t
                          *discovery),
-                     dhcpNetworkPktInfo_t (*callbackGetAckDependencies) (pktDhcpPacket_t *request),
                      char * (*callbackLeaseOperation) (pktDhcpPacket_t *ack))
 {
   /* TODO port validation */
@@ -111,7 +110,7 @@ dhcpNetworkListener (char *address, int port,
 
           /* TODO Check requested ip address with ping */
 
-          packetInfo = callbackGetOfferDependencies (requestPkt);
+          packetInfo = callbackGetReplyDependencies (requestPkt);
 
           pktGenOffer (requestPkt, replyPkt, packetInfo.fields, packetInfo.options);
 
@@ -121,7 +120,7 @@ dhcpNetworkListener (char *address, int port,
           dhcpNetworkReciveRequestPkt (dhcpSocket, requestPkt, replyPkt,
                                        &dhcpClientAddress, &dhcpClientAddressLen);
 
-          packetInfo = callbackGetAckDependencies (requestPkt);
+          packetInfo = callbackGetReplyDependencies (requestPkt);
 
           pktGenAck (requestPkt, replyPkt, packetInfo.fields, packetInfo.options);
 
