@@ -58,7 +58,7 @@ dhcpNetworkReciveRequestPkt (int dhcpSocket, pktDhcpPacket_t *requestPkt,
 
 static inline void
 dhcpNetworkSendBootReplyPkt (int dhcpSocket, pktDhcpPacket_t *replyPkt,
-                              struct sockaddr_in *dhcpClientAddress, socklen_t dhcpClientAddressLen)
+                             struct sockaddr_in *dhcpClientAddress, socklen_t dhcpClientAddressLen)
 {
   dhcpClientAddress->sin_addr.s_addr = INADDR_BROADCAST;
 
@@ -69,9 +69,8 @@ dhcpNetworkSendBootReplyPkt (int dhcpSocket, pktDhcpPacket_t *replyPkt,
 int dhcpNetworkSocketInit (int port);
 
 int dhcpNetworkListener (char *address, int port,
-                         dhcpNetworkPktInfo_t (*callbackGetOfferDependencies) (pktDhcpPacket_t
+                         dhcpNetworkPktInfo_t (*callbackGetReplyDependencies) (pktDhcpPacket_t
                              *discovery),
-                         dhcpNetworkPktInfo_t (*callbackGetAckDependencies) (pktDhcpPacket_t *request),
-                         char* (*callbackLeaseOperation) (pktDhcpPacket_t *ack));
+                         char * (*callbackLeaseOperation) (pktDhcpPacket_t *ack));
 
 #endif
