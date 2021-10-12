@@ -70,7 +70,7 @@ int dhcpNetworkSocketInit (int port);
 
 int dhcpNetworkListener (char *address, int port,
                          dhcpNetworkPktInfo_t (*callbackGetReplyDependencies) (pktDhcpPacket_t
-                             *discovery),
+                             *pkt, char *serverIdentifier),
                          char * (*callbackLeaseOperation) (pktDhcpPacket_t *ack));
 
 #endif
