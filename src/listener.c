@@ -115,7 +115,7 @@ dhcpNetworkListener (char *address, int port,
 
           /* TODO checking arp for dhcp starvation preventation */
           
-          if ((errorMsg = callbackLeaseOperation (replyPkt)) == NULL)
+          if ((errorMsg = callbackLeaseOperation (requestPkt)) == NULL)
             {
               dhcpNetworkSendBootReplyPkt (dhcpSocket, replyPkt, &dhcpClientAddress,
                                             dhcpClientAddressLen);
