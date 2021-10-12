@@ -24,7 +24,7 @@ cleanupSuiteNetwork()
 }
 
 dhcpNetworkPktInfo_t
-getReplyDependencies (pktDhcpPacket_t *discovery)
+getReplyDependencies (pktDhcpPacket_t *pkt, char *serverIdentifier)
 {
   dhcpNetworkPktInfo_t info =
   {
@@ -35,7 +35,7 @@ getReplyDependencies (pktDhcpPacket_t *discovery)
 
     .options =
     {
-      {.func = (pktGenCallbackFunc_t)pktGenOptDhcpServerIdentifier, .param = TEST_FAKE_DATA_DHCP_NETWORK_SERVER_IDENTIFIER},
+      {.func = (pktGenCallbackFunc_t)pktGenOptDhcpServerIdentifier, .param = serverIdentifier},
       {.func = (pktGenCallbackFunc_t)pktGenOptIpAddrLeaseTime, .param = (void *)TEST_FAKE_DATA_DHCP_NETWORK_IP_ADDRESS_LEASE_TIME},
       {.func = (pktGenCallbackFunc_t)pktGenOptSubnetMask, .param = TEST_FAKE_DATA_DHCP_NETWORK_SUBNET_MASK},
       {.func = (pktGenCallbackFunc_t)pktGenOptRouter, .param = TEST_FAKE_DATA_DHCP_NETWORK_ROUTER},
@@ -44,7 +44,7 @@ getReplyDependencies (pktDhcpPacket_t *discovery)
     }
   };
 
-  (void *)discovery;      /* Quit unused warning */
+  (void *)pkt;      /* Quit unused warning */
 
   return info;
 }
