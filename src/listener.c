@@ -32,18 +32,6 @@ dhcpNetworkSocketInit (int port)
   if (retval == -1)
     return EXIT_FAILURE;
 
-  retval = setsockopt (dhcpSocket, SOL_SOCKET, SO_REUSEADDR, &enable,
-                       sizeof (enable));
-
-  if (retval == -1)
-    return EXIT_FAILURE;
-
-  retval = setsockopt (dhcpSocket, SOL_SOCKET, SO_REUSEPORT, &enable,
-                       sizeof (enable));
-
-  if (retval == -1)
-    return EXIT_FAILURE;
-
   dhcpServerAddress.sin_family = AF_INET;
 
   dhcpServerAddress.sin_port = htons (port);
@@ -61,9 +49,9 @@ dhcpNetworkSocketInit (int port)
 
 int
 dhcpNetworkListener (char *address, int port,
-                     dhcpNetworkPktInfo_t (*callbackGetOfferDependencies) (pktDhcpPacket_t
+                     dhcpNetworkPktInfo_t (*callbackGetReplyDependencies) (pktDhcpPacket_t
                          *discovery),
-                     dhcpNetworkPktInfo_t (*callbackGetAckDependencies) (pktDhcpPacket_t *request))
+                     char * (*callbackLeaseOperation) (pktDhcpPacket_t *ack))
 {
   /* TODO port validation */
 
@@ -94,7 +82,7 @@ dhcpNetworkListener (char *address, int port,
 
       pktDhcpPacket_t *requestPkt = (pktDhcpPacket_t *)reqBuf;
 
-      pktDhcpPacket_t *replayPkt = (pktDhcpPacket_t *)calloc (sizeof (
+      pktDhcpPacket_t *replyPkt = (pktDhcpPacket_t *)calloc (sizeof (
                                      pktDhcpPacket_t),
                                    sizeof (pktDhcpPacket_t));
 
@@ -105,37 +93,54 @@ dhcpNetworkListener (char *address, int port,
 
       if (fork() == 0)
         {
+          char *errorMsg;
           struct in_addr *requestedIpAddress;
 
           /* TODO Check requested ip address with ping */
 
-          packetInfo = callbackGetOfferDependencies (requestPkt);
+          packetInfo = callbackGetReplyDependencies (requestPkt);
 
-          pktGenOffer (requestPkt, replayPkt, packetInfo.fields, packetInfo.options);
+          pktGenOffer (requestPkt, replyPkt, packetInfo.fields, packetInfo.options);
 
-          dhcpNetworkSendBootReplayPkt (dhcpSocket, replayPkt, &dhcpClientAddress,
+          dhcpNetworkSendBootReplyPkt (dhcpSocket, replyPkt, &dhcpClientAddress,
                                         dhcpClientAddressLen);
 
-          dhcpNetworkReciveRequestPkt (dhcpSocket, requestPkt, replayPkt,
+          dhcpNetworkReciveRequestPkt (dhcpSocket, requestPkt, replyPkt,
                                        &dhcpClientAddress, &dhcpClientAddressLen);
 
-          packetInfo = callbackGetAckDependencies (requestPkt);
+          packetInfo = callbackGetReplyDependencies (requestPkt);
 
-          pktGenAck (requestPkt, replayPkt, packetInfo.fields, packetInfo.options);
+          pktGenAck (requestPkt, replyPkt, packetInfo.fields, packetInfo.options);
 
-          dhcpNetworkSendBootReplayPkt (dhcpSocket, replayPkt, &dhcpClientAddress,
-                                        dhcpClientAddressLen);
 
           /* TODO checking arp for dhcp starvation preventation */
-          printf ("Lease!\n");
+          
+          if ((errorMsg = callbackLeaseOperation (requestPkt)) == NULL)
+            {
+              dhcpNetworkSendBootReplyPkt (dhcpSocket, replyPkt, &dhcpClientAddress,
+                                            dhcpClientAddressLen);
+            }
+          else
+            {
+              pktGenCallback_t options[] =
+              {
+                {.func = (pktGenCallbackFunc_t)pktGenOptDhcpServerIdentifier, .param = address},
+                {.func = (pktGenCallbackFunc_t)pktGenOptMessage, .param = errorMsg},
+              };
+
+              pktGenNak (requestPkt, replyPkt, NULL, options);
+
+              dhcpNetworkSendBootReplyPkt (dhcpSocket, replyPkt, &dhcpClientAddress,
+                                            dhcpClientAddressLen);
+            }
 
           bzero (reqBuf, DHCP_PACKET_MAX_LEN);
 
-          bzero (replayPkt, DHCP_PACKET_MAX_LEN);
+          bzero (replyPkt, DHCP_PACKET_MAX_LEN);
 
-          free (replayPkt);
+          free (replyPkt);
 
-          replayPkt = NULL;
+          replyPkt = NULL;
 
           exit (EXIT_SUCCESS);
         }

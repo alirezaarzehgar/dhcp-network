@@ -20,7 +20,7 @@ typedef struct
 
 static inline void
 dhcpNetworkReciveBootRequestPkt (int dhcpSocket, pktDhcpPacket_t *requestPkt,
-                                 pktDhcpPacket_t *previousReplayPkt, struct sockaddr_in *dhcpClientAddress,
+                                 pktDhcpPacket_t *previousReplyPkt, struct sockaddr_in *dhcpClientAddress,
                                  socklen_t *dhcpClientAddressLen, int pktType)
 {
   int fdReturnedValue = 0;
@@ -31,7 +31,7 @@ dhcpNetworkReciveBootRequestPkt (int dhcpSocket, pktDhcpPacket_t *requestPkt,
                                   (struct sockaddr *)dhcpClientAddress, dhcpClientAddressLen);
 
       if (fdReturnedValue >= 0 && pktType == DHCPREQUEST
-          && previousReplayPkt != NULL && requestPkt->xid == previousReplayPkt->xid)
+          && previousReplyPkt != NULL && requestPkt->xid == previousReplyPkt->xid)
         break;
       else
         continue;
@@ -49,28 +49,28 @@ dhcpNetworkReciveDiscoveryPkt (int dhcpSocket, pktDhcpPacket_t *requestPkt,
 
 static inline void
 dhcpNetworkReciveRequestPkt (int dhcpSocket, pktDhcpPacket_t *requestPkt,
-                             pktDhcpPacket_t *previousReplayPkt, struct sockaddr_in *dhcpClientAddress,
+                             pktDhcpPacket_t *previousReplyPkt, struct sockaddr_in *dhcpClientAddress,
                              socklen_t *dhcpClientAddressLen)
 {
-  dhcpNetworkReciveBootRequestPkt (dhcpSocket, requestPkt, previousReplayPkt,
+  dhcpNetworkReciveBootRequestPkt (dhcpSocket, requestPkt, previousReplyPkt,
                                    dhcpClientAddress, dhcpClientAddressLen, DHCPREQUEST);
 }
 
 static inline void
-dhcpNetworkSendBootReplayPkt (int dhcpSocket, pktDhcpPacket_t *replayPkt,
-                              struct sockaddr_in *dhcpClientAddress, socklen_t dhcpClientAddressLen)
+dhcpNetworkSendBootReplyPkt (int dhcpSocket, pktDhcpPacket_t *replyPkt,
+                             struct sockaddr_in *dhcpClientAddress, socklen_t dhcpClientAddressLen)
 {
   dhcpClientAddress->sin_addr.s_addr = INADDR_BROADCAST;
 
-  sendto (dhcpSocket, replayPkt, DHCP_PACKET_MAX_LEN, 0,
+  sendto (dhcpSocket, replyPkt, DHCP_PACKET_MAX_LEN, 0,
           (struct sockaddr *)dhcpClientAddress, dhcpClientAddressLen);
 }
 
 int dhcpNetworkSocketInit (int port);
 
 int dhcpNetworkListener (char *address, int port,
-                         dhcpNetworkPktInfo_t (*callbackGetOfferDependencies) (pktDhcpPacket_t
+                         dhcpNetworkPktInfo_t (*callbackGetReplyDependencies) (pktDhcpPacket_t
                              *discovery),
-                         dhcpNetworkPktInfo_t (*callbackGetAckDependencies) (pktDhcpPacket_t *request));
+                         char * (*callbackLeaseOperation) (pktDhcpPacket_t *ack));
 
 #endif
