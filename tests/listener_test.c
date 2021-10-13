@@ -23,8 +23,6 @@ dhcpNetworkReceiveBootRequestPktTest()
   int pktType = DHCPREQUEST;
   int dhcpSocket = dhcpNetworkSocketInit (port);
 
-  //socklen_t dhcpClientAddressLen;
-
   dhcpNetworkPktInfo_t
   getReplyDependencies (pktDhcpPacket_t *requestPkt)
   {
