@@ -1,7 +1,7 @@
 /**
  * @file listener_test.h
- * @author me
- * @brief unit test for network_listener
+ * @author forghani_m
+ * @brief test for network_listener - inline functions
  * @version 0.1.0
  * @date 9 Oct 2021
  *
